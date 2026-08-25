@@ -1,5 +1,7 @@
 node_modules/
 dist/
 .env
+extension-config.json
 .DS_Store
 *.log
+gha-creds-*.json

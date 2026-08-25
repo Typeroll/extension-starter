@@ -1,4 +1,5 @@
 import crypto from 'node:crypto';
+import { createMemoryProviderStorage, type TrustedIssuerRecord, type TrustedIssuerRepository } from './storage.js';
 
 export interface JwtClaims {
   iss: string;
@@ -36,11 +37,6 @@ export interface PairingRequest {
   jwks_fingerprint: string;
 }
 
-interface TrustedIssuer {
-  jwks: JsonWebKeySet;
-  fingerprint: string;
-}
-
 function decodeJsonPart<T>(value: string): T {
   return JSON.parse(Buffer.from(value, 'base64url').toString('utf8')) as T;
 }
@@ -66,6 +62,10 @@ export function canonicalJson(value: unknown): string {
 
 export function jwksFingerprint(jwks: JsonWebKeySet): string {
   return crypto.createHash('sha256').update(canonicalJson(jwks)).digest('hex');
+}
+
+export function recipientTokenDigest(extensionId: string, token: string): string {
+  return crypto.createHash('sha256').update(`${extensionId}\0${token}`).digest('hex');
 }
 
 export function verifyEs256Jwt(
@@ -116,10 +116,20 @@ export function verifyEventSignature(
 
 export class IssuerTrustStore {
   readonly #extensionId: string;
-  readonly #issuers = new Map<string, TrustedIssuer>();
+  readonly #repository: TrustedIssuerRepository;
+  readonly #issuers = new Map<string, TrustedIssuerRecord>();
 
-  constructor(extensionId: string) {
+  constructor(extensionId: string, repository: TrustedIssuerRepository = createMemoryProviderStorage().trustedIssuers) {
     this.#extensionId = extensionId;
+    this.#repository = repository;
+  }
+
+  async #get(issuer: string): Promise<TrustedIssuerRecord | undefined> {
+    const cached = this.#issuers.get(issuer);
+    if (cached) return cached;
+    const stored = await this.#repository.get(issuer);
+    if (stored) this.#issuers.set(issuer, stored);
+    return stored;
   }
 
   async pair(input: PairingRequest): Promise<{ issuer: string; nonce: string; jwks_fingerprint: string }> {
@@ -151,14 +161,21 @@ export class IssuerTrustStore {
     });
     if (!claims) throw new Error('Invalid issuer pairing assertion');
 
-    this.#issuers.set(input.issuer, { jwks, fingerprint });
+    const record: TrustedIssuerRecord = {
+      issuer: input.issuer,
+      jwks,
+      fingerprint,
+      updated_at: new Date().toISOString(),
+    };
+    await this.#repository.put(record);
+    this.#issuers.set(input.issuer, record);
     return { issuer: input.issuer, nonce: input.nonce, jwks_fingerprint: fingerprint };
   }
 
-  verifyInstallation(token: string): JwtClaims | undefined {
+  async verifyInstallation(token: string): Promise<JwtClaims | undefined> {
     const claims = unverifiedClaims(token);
     if (!claims) return undefined;
-    const trust = this.#issuers.get(claims.iss);
+    const trust = await this.#get(claims.iss);
     if (!trust) return undefined;
     return verifyEs256Jwt(token, trust.jwks, {
       issuer: claims.iss,
@@ -167,10 +184,10 @@ export class IssuerTrustStore {
     });
   }
 
-  verifyDelegatedUser(token: string): JwtClaims | undefined {
+  async verifyDelegatedUser(token: string): Promise<JwtClaims | undefined> {
     const claims = unverifiedClaims(token);
     if (!claims) return undefined;
-    const trust = this.#issuers.get(claims.iss);
+    const trust = await this.#get(claims.iss);
     if (!trust) return undefined;
     return verifyEs256Jwt(token, trust.jwks, {
       issuer: claims.iss,
@@ -178,7 +195,7 @@ export class IssuerTrustStore {
     });
   }
 
-  has(issuer: string): boolean {
-    return this.#issuers.has(issuer);
+  async has(issuer: string): Promise<boolean> {
+    return Boolean(await this.#get(issuer));
   }
 }

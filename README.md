@@ -53,6 +53,8 @@ typeroll-extension.json
    event IDs. The in-memory stores in this starter are development examples.
 6. Deploy immutable frontend assets, update their URLs, and run
    `npm run manifest:sync` to record exact SHA-256 hashes.
+7. Set `BASE_PATH` when several independently deployed Extensions share one
+   public origin. Keep the same prefix in every manifest URL.
 
 ## Build and verify
 
@@ -66,6 +68,9 @@ runs runtime/security tests, and verifies the manifest against the built bytes.
 CI additionally fails if a build changes a committed manifest hash. Commit a
 new manifest hash whenever the frontend asset changes and release a new
 semantic version before publishing it.
+
+Before a real release, also run `npm run manifest:validate:production`. It
+rejects the example Extension ID and placeholder origin.
 
 ## Connect to Typeroll
 
@@ -103,12 +108,26 @@ revocable credential and authorize every API request.
 
 ## Provider deployment
 
-`src/provider/server.ts` is a dependency-free Node reference server. Extract
-the request handlers into the serverless adapter used by your deployment
-platform, and replace all process-local maps with durable storage. The protocol
-logic in `src/provider/security.ts` is kept separate so it can be reused by a
-Cloudflare Worker with `nodejs_compat`, an AWS Lambda adapter, or a Vercel
-function.
+`src/provider/server.ts` is a dependency-free Node reference server. Local
+development uses the explicit in-memory adapter from
+`src/provider/storage.ts`. A production start refuses to boot unless
+`PROVIDER_STORAGE_MODULE` points to a compiled module that exports
+`createProviderStorage()` and implements durable issuer, event-receipt, and
+application storage. The protocol logic remains reusable from a Cloudflare
+Worker with `nodejs_compat`, an AWS Lambda adapter, a Vercel function, or a
+Cloud Run service.
+
+The included multi-stage `Dockerfile` builds the frontend and provider server.
+It intentionally does not supply a production storage adapter; each concrete
+Extension repository owns that adapter and its cloud dependencies.
+
+Several repositories may share one origin without sharing a deployment. For
+example, set `BASE_PATH=quote-extension` and use URLs such as
+`https://tools.example.com/quote-extension/assets/1.0.0/index.js`. Route that
+prefix to this repository's service and preserve the prefix. Other tools can
+use their own prefixes and services. Admin cookies are scoped to the configured
+path, but path routing is not an authentication boundary: every service must
+still verify Typeroll assertions and authorize the installation.
 
 Production requirements:
 
@@ -118,6 +137,8 @@ Production requirements:
 - keep client credentials and webhook secrets in a secret manager;
 - never log recipient tokens, JWTs, cookies, event bodies, or credentials;
 - use a durable database for application data;
+- bind every recipient record and action to the verified installation ID;
+- store only a one-way digest of opaque recipient tokens;
 - serve versioned frontend assets immutably over HTTPS.
 
 See [Typeroll Extension documentation](https://docs.typeroll.com/extensions/overview/)

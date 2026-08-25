@@ -11,5 +11,9 @@
   from browser input. Derive it from a verified Typeroll assertion.
 - Store production client credentials, event secrets, paired issuer records,
   lifecycle idempotency records, and application data in durable services.
+- Keep `BASE_PATH`, manifest URLs, reverse-proxy routing, asset version, and
+  admin cookie path aligned when sharing one public tools origin.
+- Bind recipient records and actions to the installation ID from a verified
+  assertion, and store only a one-way digest of recipient tokens.
 - Keep code, identifiers, comments, routes, API fields, tests, and logs in
   English.

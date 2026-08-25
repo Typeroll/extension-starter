@@ -20,3 +20,5 @@ jobs:
       - run: npm run check
       - name: Require synchronized manifest hashes
         run: git diff --exit-code -- typeroll-extension.json
+      - name: Build production container
+        run: docker build --tag typeroll-extension-starter:test .

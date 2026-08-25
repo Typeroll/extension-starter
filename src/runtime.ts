@@ -10,7 +10,7 @@ export interface ExtensionNavigation {
   subscribe(listener: (view: string) => void): () => void;
 }
 
-export interface ExtensionGateway {
+export interface ExtensionApi {
   fetch(resource: string, options?: RequestInit): Promise<Response>;
 }
 
@@ -44,7 +44,7 @@ export interface ExtensionRuntimeContext {
   config: Record<string, unknown>;
   url: ExtensionUrlContext;
   navigation: ExtensionNavigation;
-  gateway: ExtensionGateway;
+  api: ExtensionApi;
   forms: ExtensionForms;
 }
 

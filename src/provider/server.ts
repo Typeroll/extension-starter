@@ -13,6 +13,13 @@ const extensionVersion = process.env.EXTENSION_VERSION || '1.0.0';
 const clientId = process.env.TYPEROLL_CLIENT_ID || '';
 const clientSecret = process.env.TYPEROLL_CLIENT_SECRET || '';
 const eventSecret = process.env.TYPEROLL_EVENT_SECRET || '';
+const allowedSiteOrigins = new Set(
+  String(process.env.ALLOWED_SITE_ORIGINS || '')
+    .split(',')
+    .map((value) => value.trim())
+    .filter(Boolean)
+    .map((value) => new URL(value).origin),
+);
 
 async function loadStorage(): Promise<ProviderStorage> {
   if (localDevelopment) {
@@ -66,22 +73,26 @@ function bearerCookie(request: IncomingMessage, name: string): string | undefine
   return cookie ? decodeURIComponent(cookie.slice(name.length + 1)) : undefined;
 }
 
-function allowLocalCors(request: IncomingMessage, response: ServerResponse): void {
-  if (!localDevelopment) return;
+function allowSiteCors(request: IncomingMessage, response: ServerResponse): boolean {
   const origin = request.headers.origin;
-  if (origin && /^http:\/\/127\.0\.0\.1:\d+$/.test(origin)) {
-    response.setHeader('Access-Control-Allow-Origin', origin);
-    response.setHeader('Vary', 'Origin');
-    response.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-    response.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  }
+  const allowed = typeof origin === 'string' && (
+    (localDevelopment && /^http:\/\/127\.0\.0\.1:\d+$/.test(origin)) ||
+    allowedSiteOrigins.has(origin)
+  );
+  if (!allowed) return false;
+  response.setHeader('Access-Control-Allow-Origin', origin);
+  response.setHeader('Vary', 'Origin');
+  response.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-Typeroll-Connector-Token');
+  response.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  return true;
 }
 
 async function installationId(request: IncomingMessage): Promise<string | undefined> {
   if (localDevelopment) return 'local-installation';
-  const assertion = request.headers['x-typeroll-installation-assertion'];
-  if (typeof assertion !== 'string') return undefined;
-  const claims = await trustStore.verifyInstallation(assertion);
+  const token = request.headers['x-typeroll-connector-token'];
+  if (typeof token !== 'string' || typeof request.headers.origin !== 'string') return undefined;
+  const claims = await trustStore.verifyPublicConnector(token);
+  if (claims?.origin !== request.headers.origin) return undefined;
   return typeof claims?.installation_id === 'string' && claims.installation_id ? claims.installation_id : undefined;
 }
 
@@ -96,9 +107,9 @@ function route(pathname: string): string | undefined {
 }
 
 const server = http.createServer(async (request, response) => {
-  allowLocalCors(request, response);
-  if (request.method === 'OPTIONS' && localDevelopment) {
-    response.writeHead(204).end();
+  const corsAllowed = allowSiteCors(request, response);
+  if (request.method === 'OPTIONS') {
+    response.writeHead(corsAllowed ? 204 : 403).end();
     return;
   }
 
@@ -190,10 +201,15 @@ const server = http.createServer(async (request, response) => {
       return;
     }
 
+    if (pathname.startsWith('/typeroll/quotes/') && !corsAllowed) {
+      sendJson(response, 403, { error: 'Site origin is not allowed' });
+      return;
+    }
+
     if (request.method === 'GET' && pathname === '/typeroll/quotes/current') {
       const currentInstallationId = await installationId(request);
       if (!currentInstallationId) {
-        sendJson(response, 401, { error: 'Invalid installation assertion' });
+        sendJson(response, 401, { error: 'Invalid public Connector token' });
         return;
       }
       const token = url.searchParams.get('token') || '';
@@ -207,7 +223,7 @@ const server = http.createServer(async (request, response) => {
     if (request.method === 'POST' && pathname === '/typeroll/quotes/approve') {
       const currentInstallationId = await installationId(request);
       if (!currentInstallationId) {
-        sendJson(response, 401, { error: 'Invalid installation assertion' });
+        sendJson(response, 401, { error: 'Invalid public Connector token' });
         return;
       }
       const input = JSON.parse(await readBody(request)) as { token?: string };
@@ -253,7 +269,7 @@ const server = http.createServer(async (request, response) => {
 
 server.listen(port, host, () => {
   console.log(`Quote provider listening on ${host}:${port}`);
-  if (localDevelopment) console.log('Local development assertion bypass is enabled');
+  if (localDevelopment) console.log('Local development Connector-token bypass is enabled');
 });
 
 for (const signal of ['SIGINT', 'SIGTERM'] as const) {

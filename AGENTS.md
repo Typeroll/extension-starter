@@ -1,4 +1,4 @@
-# Typeroll Extension starter instructions
+# Typeroll Connector starter instructions
 
 - Use Node.js 22 or later.
 - Run `npm run check` after changing runtime, provider, manifest, or build code.
@@ -7,13 +7,15 @@
 - Never enable `TYPEROLL_LOCAL_DEVELOPMENT=1` in a deployed environment.
 - Recipient URL tokens belong to the provider. Do not persist or log them in
   Typeroll data, generated HTML, diagnostics, or analytics.
-- Do not trust an issuer, site, organization, installation, or user identifier
-  from browser input. Derive it from a verified Typeroll assertion.
+- Do not trust an issuer, site, organization, installation, origin, or user
+  identifier from browser input. Derive it from a verified Typeroll token.
 - Store production client credentials, event secrets, paired issuer records,
   lifecycle idempotency records, and application data in durable services.
-- Keep `BASE_PATH`, manifest URLs, reverse-proxy routing, asset version, and
+- Keep `BASE_PATH`, manifest URLs, upstream path routing, asset version, and
   admin cookie path aligned when sharing one public tools origin.
+- Provider APIs must use explicit site-origin CORS, verify the public Connector
+  token and match its `origin` claim to the browser `Origin` header.
 - Bind recipient records and actions to the installation ID from a verified
-  assertion, and store only a one-way digest of recipient tokens.
+  token, and store only a one-way digest of recipient tokens.
 - Keep code, identifiers, comments, routes, API fields, tests, and logs in
   English.

@@ -170,7 +170,7 @@ async function mountRecipientQuote(
   let error: string | undefined;
 
   async function request(path: string, options?: RequestInit): Promise<Quote> {
-    const response = await context.gateway.fetch(path, options);
+    const response = await context.api.fetch(path, options);
     if (!response.ok) throw new Error(`Quote API returned ${response.status}`);
     return response.json() as Promise<Quote>;
   }

@@ -7,7 +7,7 @@ function encoded(value: unknown): string {
   return Buffer.from(JSON.stringify(value)).toString('base64url');
 }
 
-test('verifies a scoped ES256 installation assertion', () => {
+test('verifies a scoped ES256 public Connector token', () => {
   const { privateKey, publicKey } = crypto.generateKeyPairSync('ec', { namedCurve: 'P-256' });
   const jwk = publicKey.export({ format: 'jwk' });
   const now = new Date('2026-08-25T12:00:00.000Z');
@@ -16,7 +16,8 @@ test('verifies a scoped ES256 installation assertion', () => {
     iss: 'https://admin.example.com',
     aud: 'com.example.quote-extension',
     sub: 'install-1',
-    token_use: 'installation',
+    token_use: 'public_connector',
+    origin: 'https://customer.example',
     installation_id: 'install-1',
     jti: 'assertion-1',
     iat: Math.floor(now.getTime() / 1000),
@@ -32,7 +33,7 @@ test('verifies a scoped ES256 installation assertion', () => {
   }, {
     issuer: 'https://admin.example.com',
     audience: 'com.example.quote-extension',
-    tokenUse: 'installation',
+    tokenUse: 'public_connector',
   }, now);
 
   assert.equal(claims?.installation_id, 'install-1');
@@ -41,7 +42,7 @@ test('verifies a scoped ES256 installation assertion', () => {
   }, {
     issuer: 'https://other.example.com',
     audience: 'com.example.quote-extension',
-    tokenUse: 'installation',
+    tokenUse: 'public_connector',
   }, now), undefined);
 });
 

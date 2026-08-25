@@ -1,9 +1,10 @@
-# Typeroll Extension starter
+# Typeroll Connector starter
 
-Use this repository as a template for an externally hosted Typeroll Extension.
+Use this repository as a template for a Typeroll Connector. Source identifiers
+retain `Extension` for protocol compatibility.
 It includes a bundled frontend block, Typeroll Forms bindings, opaque
-recipient-link handling, internal navigation, gateway calls, provider-side
-assertion verification, admin SSO, lifecycle webhook verification, a local
+recipient-link handling, internal navigation, direct provider API calls,
+provider-side token verification, admin SSO, lifecycle webhook verification, a local
 runtime host, tests, and CI.
 
 The example has two modes. Without a recipient token it is a bespoke quote
@@ -33,7 +34,7 @@ http://127.0.0.1:5173/?quote=demo-customer-token
 ```
 
 The development command runs a Vite host and the sample provider together.
-It explicitly enables a local-only installation-assertion bypass. The provider
+It explicitly enables a local-only Connector-token bypass. The provider
 does not enable that bypass when started or deployed directly.
 
 ## Repository layout
@@ -47,10 +48,10 @@ test/               Runtime and security contract tests
 typeroll-extension.json
 ```
 
-## Customize the Extension
+## Customize the Connector
 
 1. Replace `com.example.quote-extension` everywhere with your lowercase,
-   namespaced Extension ID.
+   namespaced Connector ID.
 2. Change provider metadata and HTTPS origins in
    `typeroll-extension.json`.
 3. Create the `quote-leads` form described below, or change the manifest binding
@@ -63,7 +64,7 @@ typeroll-extension.json
    event IDs. The in-memory stores in this starter are development examples.
 7. Deploy immutable frontend assets, update their URLs, and run
    `npm run manifest:sync` to record exact SHA-256 hashes.
-8. Set `BASE_PATH` when several independently deployed Extensions share one
+8. Set `BASE_PATH` when several independently deployed Connectors share one
    public origin. Keep the same prefix in every manifest URL.
 
 ## Use Typeroll Forms as the backend
@@ -90,9 +91,11 @@ await context.forms.submit('lead', {
 });
 ```
 
-Typeroll supplies the signed form token and proof of work, posts through a
-same-origin `/.typeroll/forms/submit` route, and stores the submission in the
-ordinary Forms inbox. The Extension cannot edit forms or read submissions.
+Typeroll supplies the signed form token and proof of work, posts directly to
+the absolute Forms endpoint supplied by the CMS, and stores the submission in
+the ordinary Forms inbox. The Connector cannot edit forms or read submissions.
+Cloud sites use Typeroll Cloud Forms; self-hosted sites use their own Forms API.
+No Function is installed in the customer site's static hosting project.
 
 ## Build and verify
 
@@ -108,7 +111,7 @@ new manifest hash whenever the frontend asset changes and release a new
 semantic version before publishing it.
 
 Before a real release, also run `npm run manifest:validate:production`. It
-rejects the example Extension ID and placeholder origin.
+rejects the example Connector ID and placeholder origin.
 
 ## Connect to Typeroll
 
@@ -125,7 +128,7 @@ Then use the CLI bundled with `@typeroll/mcp-server`:
 npm run extension:validate
 npm run extension:push
 npm run extension:install -- --site your-site-id --config extension-config.example.json
-npm run extension:promote -- 1.1.0
+npm run extension:promote -- 1.2.0
 ```
 
 The portal performs authoritative validation. Production asset and provider
@@ -158,21 +161,29 @@ Cloud Run service.
 
 The included multi-stage `Dockerfile` builds the frontend and provider server.
 It intentionally does not supply a production storage adapter; each concrete
-Extension repository owns that adapter and its cloud dependencies.
+Connector repository owns that adapter and its cloud dependencies.
 
 Several repositories may share one origin without sharing a deployment. For
 example, set `BASE_PATH=quote-extension` and use URLs such as
-`https://tools.example.com/quote-extension/assets/1.1.0/index.js`. Route that
+`https://tools.example.com/quote-extension/assets/1.2.0/index.js`. Route that
 prefix to this repository's service and preserve the prefix. Other tools can
 use their own prefixes and services. Admin cookies are scoped to the configured
 path, but path routing is not an authentication boundary: every service must
-still verify Typeroll assertions and authorize the installation.
+still verify Typeroll tokens and authorize the installation.
+
+Set `ALLOWED_SITE_ORIGINS` to a comma-separated list of exact published site
+origins. The API sends CORS only to those origins. The Typeroll runtime calls
+the provider directly with `credentials: omit` and a five-minute
+`X-Typeroll-Connector-Token`; no Typeroll or customer-hosted reverse proxy is
+part of the request path.
 
 Production requirements:
 
 - persist paired issuer/JWKS records and refresh them safely during rotation;
 - persist lifecycle idempotency IDs for at least the provider retry window;
-- validate every installation assertion and delegated user token;
+- validate every public Connector token and delegated user token;
+- require the verified Connector token's `origin` claim to equal the browser
+  `Origin` header;
 - keep client credentials and webhook secrets in a secret manager;
 - never log recipient tokens, JWTs, cookies, event bodies, or credentials;
 - use a durable database for application data;
@@ -186,5 +197,5 @@ SHA-256 verified, and copied under the customer domain's own
 CDN. A bundled component is therefore trusted customer-origin code; use the
 sandboxed `embedded_app` mode for code that should not receive that trust.
 
-See [Typeroll Extension documentation](https://docs.typeroll.com/extensions/overview/)
+See [Typeroll Connector documentation](https://docs.typeroll.com/extensions/overview/)
 for the full manifest and runtime contract.

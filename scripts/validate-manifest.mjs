@@ -6,7 +6,7 @@ const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
 const errors = [];
 const production = process.argv.includes('--production');
 
-if (manifest.schema_version !== 1) errors.push('schema_version must be 1');
+if (manifest.schema_version !== 2) errors.push('schema_version must be 2');
 if (!/^[a-z0-9]+(?:[.-][a-z0-9][a-z0-9-]*){2,}$/.test(manifest.id || '')) errors.push('id must be a lowercase namespaced identifier');
 if (!/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(manifest.version || '')) errors.push('version must be semver');
 if (!['private', 'unlisted', 'public'].includes(manifest.distribution)) errors.push('distribution is invalid');
@@ -41,7 +41,7 @@ const executionUrls = [
   ...(components.flatMap((component) => Object.entries(component.entry || {}).filter(([key]) => key.endsWith('_url')).map(([, value]) => value))),
   ...(manifest.admin?.pages || []).map((page) => page.launch_url),
   manifest.auth?.pairing_url,
-  manifest.gateway?.base_url,
+  manifest.api?.base_url,
   manifest.events?.webhook_url,
 ].filter(Boolean);
 for (const value of executionUrls) {

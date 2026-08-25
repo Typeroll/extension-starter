@@ -14,15 +14,15 @@ if (token) {
 const providerPort = import.meta.env.VITE_PROVIDER_PORT || '8787';
 
 await mount(root, { heading: 'Your local quote' }, {
-  protocol_version: 1,
-  runtime_version: '0.36.0',
+  protocol_version: 2,
+  runtime_version: '0.37.0',
   installation_id: 'local-installation',
   extension_id: 'com.example.quote-extension',
   component_id: 'quote',
   config: { heading_default: 'Your quote' },
   url: createUrlContext(token ? { quote_token: token } : {}),
   navigation: createNavigation(),
-  gateway: {
+  api: {
     fetch(resource, options) {
       const path = resource.startsWith('/') ? resource : `/${resource}`;
       return fetch(`http://127.0.0.1:${providerPort}/typeroll${path}`, options);

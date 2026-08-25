@@ -1,13 +1,15 @@
 # Typeroll Extension starter
 
 Use this repository as a template for an externally hosted Typeroll Extension.
-It includes a bundled frontend block, opaque recipient-link handling, internal
-navigation, gateway calls, provider-side assertion verification, admin SSO,
-lifecycle webhook verification, a local runtime host, tests, and CI.
+It includes a bundled frontend block, Typeroll Forms bindings, opaque
+recipient-link handling, internal navigation, gateway calls, provider-side
+assertion verification, admin SSO, lifecycle webhook verification, a local
+runtime host, tests, and CI.
 
-The example is a quote approval flow. Open one static page with a provider-owned
-recipient token, load the matching quote, and approve it without creating
-separate Typeroll paths for each screen.
+The example has two modes. Without a recipient token it is a bespoke quote
+calculator that stores leads in Typeroll Forms and needs no custom backend.
+With `?quote=…` it opens a provider-backed, recipient-specific quote and can
+approve it without creating separate Typeroll paths for each screen.
 
 ## Quick start
 
@@ -18,7 +20,13 @@ npm install
 npm run dev
 ```
 
-Open:
+Open the local calculator:
+
+```text
+http://127.0.0.1:5173/
+```
+
+Or the provider-backed recipient example:
 
 ```text
 http://127.0.0.1:5173/?quote=demo-customer-token
@@ -45,16 +53,46 @@ typeroll-extension.json
    namespaced Extension ID.
 2. Change provider metadata and HTTPS origins in
    `typeroll-extension.json`.
-3. Replace the sample quote model and in-memory data store with your own
-   durable backend.
-4. Keep recipient token generation, expiry, revocation, action scope, and
+3. Create the `quote-leads` form described below, or change the manifest binding
+   and submitted field names to match an existing form.
+4. If the tool needs provider data, replace the sample quote model and in-memory
+   data store with your own durable backend.
+5. Keep recipient token generation, expiry, revocation, action scope, and
    replay rules in your provider backend.
-5. Configure durable storage for paired issuer JWKS and processed lifecycle
+6. Configure durable storage for paired issuer JWKS and processed lifecycle
    event IDs. The in-memory stores in this starter are development examples.
-6. Deploy immutable frontend assets, update their URLs, and run
+7. Deploy immutable frontend assets, update their URLs, and run
    `npm run manifest:sync` to record exact SHA-256 hashes.
-7. Set `BASE_PATH` when several independently deployed Extensions share one
+8. Set `BASE_PATH` when several independently deployed Extensions share one
    public origin. Keep the same prefix in every manifest URL.
+
+## Use Typeroll Forms as the backend
+
+Create a form with ID `quote-leads` on the installation site. Its single step
+should accept these field names:
+
+- `name` (required text)
+- `email` (required email)
+- `company` (optional text)
+- `plan` (text or select)
+- `team_size` (number)
+- `estimated_monthly_price` (number)
+- `source` (hidden or text)
+
+Configure email and webhook actions in the regular Forms admin. The component
+requests only `forms:submit` and calls:
+
+```ts
+await context.forms.submit('lead', {
+  name,
+  email,
+  estimated_monthly_price: estimate,
+});
+```
+
+Typeroll supplies the signed form token and proof of work, posts through a
+same-origin `/.typeroll/forms/submit` route, and stores the submission in the
+ordinary Forms inbox. The Extension cannot edit forms or read submissions.
 
 ## Build and verify
 
@@ -87,11 +125,12 @@ Then use the CLI bundled with `@typeroll/mcp-server`:
 npm run extension:validate
 npm run extension:push
 npm run extension:install -- --site your-site-id --config extension-config.example.json
-npm run extension:promote -- 1.0.0
+npm run extension:promote -- 1.1.0
 ```
 
 The portal performs authoritative validation. Production asset and provider
 URLs must be HTTPS and their origins must be registered as trusted origins.
+Approve the requested `forms:submit` scope during installation.
 
 ## Recipient links and navigation
 
@@ -123,7 +162,7 @@ Extension repository owns that adapter and its cloud dependencies.
 
 Several repositories may share one origin without sharing a deployment. For
 example, set `BASE_PATH=quote-extension` and use URLs such as
-`https://tools.example.com/quote-extension/assets/1.0.0/index.js`. Route that
+`https://tools.example.com/quote-extension/assets/1.1.0/index.js`. Route that
 prefix to this repository's service and preserve the prefix. Other tools can
 use their own prefixes and services. Admin cookies are scoped to the configured
 path, but path routing is not an authentication boundary: every service must
@@ -140,6 +179,12 @@ Production requirements:
 - bind every recipient record and action to the verified installation ID;
 - store only a one-way digest of opaque recipient tokens;
 - serve versioned frontend assets immutably over HTTPS.
+
+On a Typeroll site deployment, the declared frontend bytes are fetched,
+SHA-256 verified, and copied under the customer domain's own
+`/_assets/extensions/…` path. They are not loaded live from a mutable central
+CDN. A bundled component is therefore trusted customer-origin code; use the
+sandboxed `embedded_app` mode for code that should not receive that trust.
 
 See [Typeroll Extension documentation](https://docs.typeroll.com/extensions/overview/)
 for the full manifest and runtime contract.

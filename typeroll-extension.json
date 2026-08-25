@@ -2,8 +2,8 @@
   "schema_version": 1,
   "id": "com.example.quote-extension",
   "name": "Quote Extension",
-  "version": "1.0.0",
-  "runtime_compatibility": ">=0.35.0 <1.0.0",
+  "version": "1.1.0",
+  "runtime_compatibility": ">=0.36.0 <1.0.0",
   "distribution": "private",
   "developer": {
     "name": "Example provider",
@@ -12,8 +12,8 @@
   },
   "permissions": [
     {
-      "scope": "content:read",
-      "reason": "Reads product content when composing quotes."
+      "scope": "forms:submit",
+      "reason": "Stores calculator leads in the explicitly bound Typeroll form."
     }
   ],
   "auth": {
@@ -42,9 +42,9 @@
     "components": [
       {
         "id": "quote",
-        "label": "Quote approval",
+        "label": "Quote calculator",
         "category": "custom",
-        "description": "Open and approve a recipient-specific quote.",
+        "description": "Calculate a price, capture a lead, or open a recipient-specific quote.",
         "render_mode": "bundled_component",
         "props_schema": {
           "type": "object",
@@ -69,11 +69,17 @@
             }
           ]
         },
+        "form_bindings": [
+          {
+            "id": "lead",
+            "form_id": "quote-leads"
+          }
+        ],
         "entry": {
-          "script_url": "https://extension.example.com/assets/1.0.0/index.js",
-          "script_sha256": "fab7b97c312f827fa70ed00f0162503447b0892eed4d1a6c6c8c93e878e36c81",
-          "style_url": "https://extension.example.com/assets/1.0.0/index.css",
-          "style_sha256": "d047c95211feece573635bdc4e7aaaae507f4452a851fc91a331b04fbf8f6024"
+          "script_url": "https://extension.example.com/assets/1.1.0/index.js",
+          "script_sha256": "6af5acefa59c6018494e1cd3809800e013ee240dc34d6dc3cff69c0110c3ffa5",
+          "style_url": "https://extension.example.com/assets/1.1.0/index.css",
+          "style_sha256": "0556c34db77fe960af72118dcab2467ba1bd5d2be29d7086ec5122a1d0941502"
         },
         "unavailable_message": "The quote service is temporarily unavailable."
       }

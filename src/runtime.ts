@@ -14,6 +14,27 @@ export interface ExtensionGateway {
   fetch(resource: string, options?: RequestInit): Promise<Response>;
 }
 
+export interface ExtensionFormError {
+  field: string | null;
+  code: string;
+  message: string;
+}
+
+export interface ExtensionFormResult {
+  ok: boolean;
+  done?: boolean;
+  next_step?: string;
+  state?: string;
+  html?: string;
+  errors?: ExtensionFormError[];
+}
+
+export interface ExtensionForms {
+  has(bindingId: string): boolean;
+  list(): string[];
+  submit(bindingId: string, data: Record<string, unknown>): Promise<ExtensionFormResult>;
+}
+
 export interface ExtensionRuntimeContext {
   protocol_version: number;
   runtime_version: string;
@@ -24,6 +45,7 @@ export interface ExtensionRuntimeContext {
   url: ExtensionUrlContext;
   navigation: ExtensionNavigation;
   gateway: ExtensionGateway;
+  forms: ExtensionForms;
 }
 
 export function createUrlContext(values: Record<string, string>): ExtensionUrlContext {
@@ -55,6 +77,21 @@ export function createNavigation(initial = 'root'): ExtensionNavigation {
     subscribe(listener) {
       listeners.add(listener);
       return () => listeners.delete(listener);
+    },
+  };
+}
+
+export function createForms(
+  bindingIds: readonly string[],
+  submitter: (bindingId: string, data: Record<string, unknown>) => Promise<ExtensionFormResult>,
+): ExtensionForms {
+  const available = new Set(bindingIds);
+  return {
+    has: (bindingId) => available.has(bindingId),
+    list: () => [...available],
+    submit(bindingId, data) {
+      if (!available.has(bindingId)) return Promise.reject(new Error('Unknown Extension form binding'));
+      return submitter(bindingId, data);
     },
   };
 }

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { createNavigation, createUrlContext } from '../src/runtime.js';
+import { createForms, createNavigation, createUrlContext } from '../src/runtime.js';
 
 test('opaque URL context is consumed once and remains in the mount closure during navigation', () => {
   const url = createUrlContext({ quote_token: 'recipient-token' });
@@ -29,4 +29,16 @@ test('navigation ignores empty and repeated views', () => {
   navigation.navigate('details');
 
   assert.deepEqual(observed, ['details']);
+});
+
+test('local Forms context exposes only declared bindings', async () => {
+  const forms = createForms(['lead'], async (bindingId, data) => ({
+    ok: bindingId === 'lead' && data.email === 'ada@example.com',
+    done: true,
+  }));
+
+  assert.deepEqual(forms.list(), ['lead']);
+  assert.equal(forms.has('lead'), true);
+  assert.deepEqual(await forms.submit('lead', { email: 'ada@example.com' }), { ok: true, done: true });
+  await assert.rejects(forms.submit('another-form', {}), /Unknown Extension form binding/);
 });

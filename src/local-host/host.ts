@@ -1,5 +1,5 @@
 import { mount } from '../frontend/index.js';
-import { createNavigation, createUrlContext } from '../runtime.js';
+import { createForms, createNavigation, createUrlContext } from '../runtime.js';
 
 const root = document.querySelector<HTMLElement>('#extension-root');
 if (!root) throw new Error('Missing local Extension mount');
@@ -15,7 +15,7 @@ const providerPort = import.meta.env.VITE_PROVIDER_PORT || '8787';
 
 await mount(root, { heading: 'Your local quote' }, {
   protocol_version: 1,
-  runtime_version: '0.35.0',
+  runtime_version: '0.36.0',
   installation_id: 'local-installation',
   extension_id: 'com.example.quote-extension',
   component_id: 'quote',
@@ -28,4 +28,5 @@ await mount(root, { heading: 'Your local quote' }, {
       return fetch(`http://127.0.0.1:${providerPort}/typeroll${path}`, options);
     },
   },
+  forms: createForms(['lead'], async () => ({ ok: true, done: true })),
 });

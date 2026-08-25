@@ -1,26 +1,261 @@
 .quote-extension {
-  border: 1px solid color-mix(in srgb, currentColor 18%, transparent);
-  border-radius: 0.75rem;
-  display: grid;
-  gap: 1rem;
-  padding: clamp(1rem, 4vw, 2rem);
+  --quote-ink: #15251f;
+  --quote-muted: #5c6b64;
+  --quote-line: #d7e2dc;
+  --quote-accent: #156f52;
+  --quote-accent-dark: #0c4b37;
+  --quote-soft: #ecf5f0;
+  background: #fff;
+  border: 1px solid var(--quote-line);
+  border-radius: 1.5rem;
+  box-shadow: 0 24px 70px rgba(21, 49, 39, 0.12);
+  color: var(--quote-ink);
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  overflow: hidden;
 }
 
-.quote-extension h2,
-.quote-extension p {
+.quote-extension *,
+.quote-extension *::before,
+.quote-extension *::after {
+  box-sizing: border-box;
+}
+
+.quote-calculator {
+  display: grid;
+  grid-template-columns: minmax(0, 0.88fr) minmax(0, 1.12fr);
+}
+
+.quote-intro,
+.quote-form,
+.quote-success,
+.quote-recipient {
+  padding: clamp(1.5rem, 4vw, 3.25rem);
+}
+
+.quote-intro {
+  background:
+    radial-gradient(circle at 15% 10%, rgba(255, 255, 255, 0.55), transparent 26%),
+    linear-gradient(145deg, #dcefe5 0%, #eef6f1 100%);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.quote-eyebrow {
+  color: var(--quote-accent-dark);
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.13em;
+  margin-bottom: 0.85rem;
+  text-transform: uppercase;
+}
+
+.quote-extension h2 {
+  font-size: clamp(1.8rem, 4vw, 3rem);
+  letter-spacing: -0.04em;
+  line-height: 1.02;
   margin: 0;
 }
 
-.quote-extension button {
-  background: #111827;
-  border: 0;
-  border-radius: 999px;
-  color: #fff;
-  cursor: pointer;
-  justify-self: start;
-  padding: 0.7rem 1.1rem;
+.quote-intro > p,
+.quote-success p,
+.quote-recipient p {
+  color: var(--quote-muted);
+  line-height: 1.65;
+  margin: 1rem 0 0;
 }
 
-.quote-extension [role='alert'] {
-  color: #b42318;
+.quote-estimate {
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(21, 111, 82, 0.16);
+  border-radius: 1rem;
+  display: grid;
+  gap: 0.18rem;
+  margin-top: clamp(2rem, 5vw, 4rem);
+  padding: 1.15rem 1.25rem;
+}
+
+.quote-estimate span,
+.quote-estimate small {
+  color: var(--quote-muted);
+  font-size: 0.78rem;
+}
+
+.quote-estimate strong {
+  color: var(--quote-accent-dark);
+  font-size: clamp(1.7rem, 4vw, 2.45rem);
+  letter-spacing: -0.04em;
+}
+
+.quote-form {
+  display: grid;
+  gap: 1.1rem;
+}
+
+.quote-field {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.quote-field-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.quote-field label,
+.quote-label-row {
+  font-size: 0.84rem;
+  font-weight: 750;
+}
+
+.quote-field label span,
+.quote-label-row output {
+  color: var(--quote-muted);
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.quote-label-row {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+}
+
+.quote-field input:not([type='range']),
+.quote-field select {
+  appearance: none;
+  background: #fbfcfb;
+  border: 1px solid var(--quote-line);
+  border-radius: 0.72rem;
+  color: var(--quote-ink);
+  font: inherit;
+  min-height: 3rem;
+  padding: 0.7rem 0.85rem;
+  width: 100%;
+}
+
+.quote-field select {
+  background-image: linear-gradient(45deg, transparent 50%, var(--quote-muted) 50%), linear-gradient(135deg, var(--quote-muted) 50%, transparent 50%);
+  background-position: calc(100% - 18px) 52%, calc(100% - 13px) 52%;
+  background-repeat: no-repeat;
+  background-size: 5px 5px, 5px 5px;
+}
+
+.quote-field input:focus,
+.quote-field select:focus {
+  border-color: var(--quote-accent);
+  box-shadow: 0 0 0 3px rgba(21, 111, 82, 0.14);
+  outline: none;
+}
+
+.quote-field input[type='range'] {
+  accent-color: var(--quote-accent);
+  cursor: pointer;
+  min-height: 2rem;
+  width: 100%;
+}
+
+.quote-submit,
+.quote-recipient button {
+  align-items: center;
+  background: var(--quote-accent);
+  border: 0;
+  border-radius: 0.78rem;
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  font: inherit;
+  font-weight: 800;
+  justify-content: space-between;
+  min-height: 3.25rem;
+  padding: 0.8rem 1rem;
+}
+
+.quote-submit:hover,
+.quote-recipient button:hover {
+  background: var(--quote-accent-dark);
+}
+
+.quote-submit:focus-visible,
+.quote-recipient button:focus-visible {
+  outline: 3px solid rgba(21, 111, 82, 0.3);
+  outline-offset: 3px;
+}
+
+.quote-submit:disabled,
+.quote-recipient button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.quote-privacy,
+.quote-error {
+  font-size: 0.78rem;
+  margin: 0;
+}
+
+.quote-privacy {
+  color: var(--quote-muted);
+  text-align: center;
+}
+
+.quote-error,
+.quote-recipient [role='alert'] {
+  background: #fff0ee;
+  border-radius: 0.6rem;
+  color: #9c2f21;
+  padding: 0.7rem 0.85rem;
+}
+
+.quote-success {
+  margin: auto;
+  max-width: 42rem;
+  text-align: center;
+}
+
+.quote-success-mark {
+  align-items: center;
+  background: var(--quote-soft);
+  border-radius: 50%;
+  color: var(--quote-accent);
+  display: inline-flex;
+  font-size: 1.7rem;
+  height: 4rem;
+  justify-content: center;
+  margin-bottom: 1.2rem;
+  width: 4rem;
+}
+
+.quote-recipient {
+  display: grid;
+  gap: 1rem;
+}
+
+.quote-recipient button {
+  justify-self: start;
+}
+
+@media (max-width: 760px) {
+  .quote-calculator,
+  .quote-field-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .quote-estimate {
+    margin-top: 1.5rem;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .quote-submit,
+  .quote-recipient button {
+    transition: background-color 160ms ease, transform 160ms ease;
+  }
+
+  .quote-submit:hover,
+  .quote-recipient button:hover {
+    transform: translateY(-1px);
+  }
 }

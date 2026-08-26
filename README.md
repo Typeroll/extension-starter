@@ -11,6 +11,22 @@ calculator that stores leads in Typeroll Forms and needs no custom backend.
 With `?quote=…` it opens a provider-backed, recipient-specific quote and can
 approve it without creating separate Typeroll paths for each screen.
 
+The starter intentionally contains the superset of the native Extension
+contract. For production, keep one clear ownership model per repository:
+
+| Architecture | Keep from this starter | Remove |
+| --- | --- | --- |
+| Public SaaS, native block | Bundled component, provider API, pairing, events, admin SSO, recipient-token storage | Forms when the SaaS does not use them |
+| Private bespoke lead tool | Bundled component and Forms binding | Provider API, credentials, pairing, events, admin SSO, and custom storage |
+| Public SaaS, embedded app | Provider backend and security modules; replace the bundled entry with an `embedded_app` frame and message bridge | Customer-origin frontend bundle |
+
+See [Reference architectures](https://docs.typeroll.com/extensions/reference-architectures/)
+before choosing a deployment model. An embedded app validates the first init
+message from `window.parent`, locks its HTTPS origin, and validates all later
+messages against that origin and the negotiated Extension identity. It must not
+depend on `document.referrer`, because Typeroll uses a no-referrer iframe
+policy.
+
 ## Quick start
 
 Requirements: Node.js 22 or later.

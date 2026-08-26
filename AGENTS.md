@@ -1,4 +1,4 @@
-# Typeroll Connector starter instructions
+# Typeroll Extension starter instructions
 
 - Use Node.js 22 or later.
 - Run `npm run check` after changing runtime, provider, manifest, or build code.
@@ -13,7 +13,7 @@
   lifecycle idempotency records, and application data in durable services.
 - Keep `BASE_PATH`, manifest URLs, upstream path routing, asset version, and
   admin cookie path aligned when sharing one public tools origin.
-- Provider APIs must use explicit site-origin CORS, verify the public Connector
+- Provider APIs must use explicit site-origin CORS, verify the public Extension
   token and match its `origin` claim to the browser `Origin` header.
 - Bind recipient records and actions to the installation ID from a verified
   token, and store only a one-way digest of recipient tokens.

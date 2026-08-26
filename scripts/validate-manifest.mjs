@@ -6,7 +6,7 @@ const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
 const errors = [];
 const production = process.argv.includes('--production');
 
-if (manifest.schema_version !== 2) errors.push('schema_version must be 2');
+if (manifest.schema_version !== 3) errors.push('schema_version must be 3');
 if (!/^[a-z0-9]+(?:[.-][a-z0-9][a-z0-9-]*){2,}$/.test(manifest.id || '')) errors.push('id must be a lowercase namespaced identifier');
 if (!/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(manifest.version || '')) errors.push('version must be semver');
 if (!['private', 'unlisted', 'public'].includes(manifest.distribution)) errors.push('distribution is invalid');

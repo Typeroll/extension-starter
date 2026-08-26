@@ -14,8 +14,8 @@ if (token) {
 const providerPort = import.meta.env.VITE_PROVIDER_PORT || '8787';
 
 await mount(root, { heading: 'Your local quote' }, {
-  protocol_version: 2,
-  runtime_version: '0.37.0',
+  protocol_version: 3,
+  runtime_version: '0.38.0',
   installation_id: 'local-installation',
   extension_id: 'com.example.quote-extension',
   component_id: 'quote',

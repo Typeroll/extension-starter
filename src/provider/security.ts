@@ -172,7 +172,7 @@ export class IssuerTrustStore {
     return { issuer: input.issuer, nonce: input.nonce, jwks_fingerprint: fingerprint };
   }
 
-  async verifyPublicConnector(token: string): Promise<JwtClaims | undefined> {
+  async verifyPublicExtension(token: string): Promise<JwtClaims | undefined> {
     const claims = unverifiedClaims(token);
     if (!claims) return undefined;
     const trust = await this.#get(claims.iss);
@@ -180,7 +180,7 @@ export class IssuerTrustStore {
     return verifyEs256Jwt(token, trust.jwks, {
       issuer: claims.iss,
       audience: this.#extensionId,
-      tokenUse: 'public_connector',
+      tokenUse: 'public_extension',
     });
   }
 

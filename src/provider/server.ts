@@ -9,7 +9,7 @@ const port = Number(process.env.PORT || 8787);
 const localDevelopment = process.env.TYPEROLL_LOCAL_DEVELOPMENT === '1';
 const host = process.env.HOST || (localDevelopment ? '127.0.0.1' : '0.0.0.0');
 const basePath = `/${String(process.env.BASE_PATH || '').replace(/^\/+|\/+$/g, '')}`.replace(/^\/$/, '');
-const extensionVersion = process.env.EXTENSION_VERSION || '1.0.0';
+const extensionVersion = process.env.EXTENSION_VERSION || '1.3.0';
 const clientId = process.env.TYPEROLL_CLIENT_ID || '';
 const clientSecret = process.env.TYPEROLL_CLIENT_SECRET || '';
 const eventSecret = process.env.TYPEROLL_EVENT_SECRET || '';
@@ -82,16 +82,16 @@ function allowSiteCors(request: IncomingMessage, response: ServerResponse): bool
   if (!allowed) return false;
   response.setHeader('Access-Control-Allow-Origin', origin);
   response.setHeader('Vary', 'Origin');
-  response.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-Typeroll-Connector-Token');
+  response.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-Typeroll-Extension-Token');
   response.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   return true;
 }
 
 async function installationId(request: IncomingMessage): Promise<string | undefined> {
   if (localDevelopment) return 'local-installation';
-  const token = request.headers['x-typeroll-connector-token'];
+  const token = request.headers['x-typeroll-extension-token'];
   if (typeof token !== 'string' || typeof request.headers.origin !== 'string') return undefined;
-  const claims = await trustStore.verifyPublicConnector(token);
+  const claims = await trustStore.verifyPublicExtension(token);
   if (claims?.origin !== request.headers.origin) return undefined;
   return typeof claims?.installation_id === 'string' && claims.installation_id ? claims.installation_id : undefined;
 }
@@ -209,7 +209,7 @@ const server = http.createServer(async (request, response) => {
     if (request.method === 'GET' && pathname === '/typeroll/quotes/current') {
       const currentInstallationId = await installationId(request);
       if (!currentInstallationId) {
-        sendJson(response, 401, { error: 'Invalid public Connector token' });
+        sendJson(response, 401, { error: 'Invalid public Extension token' });
         return;
       }
       const token = url.searchParams.get('token') || '';
@@ -223,7 +223,7 @@ const server = http.createServer(async (request, response) => {
     if (request.method === 'POST' && pathname === '/typeroll/quotes/approve') {
       const currentInstallationId = await installationId(request);
       if (!currentInstallationId) {
-        sendJson(response, 401, { error: 'Invalid public Connector token' });
+        sendJson(response, 401, { error: 'Invalid public Extension token' });
         return;
       }
       const input = JSON.parse(await readBody(request)) as { token?: string };
@@ -269,7 +269,7 @@ const server = http.createServer(async (request, response) => {
 
 server.listen(port, host, () => {
   console.log(`Quote provider listening on ${host}:${port}`);
-  if (localDevelopment) console.log('Local development Connector-token bypass is enabled');
+  if (localDevelopment) console.log('Local development Extension-token bypass is enabled');
 });
 
 for (const signal of ['SIGINT', 'SIGTERM'] as const) {

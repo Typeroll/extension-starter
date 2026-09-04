@@ -16,6 +16,7 @@
     "extension:validate": "npx --package @typeroll/mcp-server typeroll extension validate",
     "extension:push": "npx --package @typeroll/mcp-server typeroll extension push --draft",
     "extension:install": "npx --package @typeroll/mcp-server typeroll extension install",
+    "extension:configure": "npx --package @typeroll/mcp-server typeroll extension configure",
     "extension:promote": "npx --package @typeroll/mcp-server typeroll extension promote"
   },
   "engines": {

@@ -143,12 +143,20 @@ Then use the CLI bundled with `@typeroll/mcp-server`:
 npm run extension:validate
 npm run extension:push
 npm run extension:install -- --site your-site-id --config extension-config.example.json
+npm run extension:configure -- --site your-site-id \
+  --installation your-installation-id --config extension-config.example.json
 npm run extension:promote -- 1.3.0
 ```
 
 The portal performs authoritative validation. Production asset and provider
 URLs must be HTTPS and their origins must be registered as trusted origins.
 Approve the requested `forms:submit` scope during installation.
+
+The install command prints the installation ID. Reuse it with
+`extension:configure` whenever installation config changes. The command merges
+declared values, preserves omitted secrets, and queues a production deploy by
+default. Pass `--no-deploy` only when batching several changes, then deploy
+once after the final update.
 
 ## Recipient links and navigation
 

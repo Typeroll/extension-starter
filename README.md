@@ -27,6 +27,14 @@ messages against that origin and the negotiated Extension identity. It must not
 depend on `document.referrer`, because Typeroll uses a no-referrer iframe
 policy.
 
+## CMS content model
+
+For Core 0.2.0 / MCP 0.45.0, every content record is a **Page** with a Content type,
+custom `fields`, its own block body and an optional shared Page template. Use one
+Page API and editor for articles, products, checklists and ordinary pages. Read
+[Pages and Content types](docs/pages-and-content-types.md) before adding content
+integration to this starter. This model requires migration of existing sites.
+
 ## Quick start
 
 Requirements: Node.js 22 or later.

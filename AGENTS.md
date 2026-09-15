@@ -19,3 +19,8 @@
   token, and store only a one-way digest of recipient tokens.
 - Keep code, identifiers, comments, routes, API fields, tests, and logs in
   English.
+
+- CMS content integration targets the unified Page model in Core 0.2.0: one
+  Page API, custom `fields`, Content types and shared Page templates. Follow
+  `docs/pages-and-content-types.md`. Do not add a second item API/model or expose
+  CMS credentials through the frontend Extension runtime.

@@ -35,15 +35,29 @@ export interface ExtensionForms {
   submit(bindingId: string, data: Record<string, unknown>): Promise<ExtensionFormResult>;
 }
 
+export interface ExtensionSite {
+  url(path: string): string;
+  navigate(path: string): void;
+}
+
+export interface ExtensionStorageArea {
+  get(key: string): unknown;
+  set(key: string, value: unknown): void;
+  remove(key: string): void;
+}
+
 export interface ExtensionRuntimeContext {
   protocol_version: number;
   runtime_version: string;
+  preview: boolean;
   installation_id: string;
   extension_id: string;
   component_id: string;
   config: Record<string, unknown>;
   url: ExtensionUrlContext;
   navigation: ExtensionNavigation;
+  site: ExtensionSite;
+  storage: { session: ExtensionStorageArea; local: ExtensionStorageArea };
   api: ExtensionApi;
   forms: ExtensionForms;
 }

@@ -20,7 +20,7 @@ contract. For production, keep one clear ownership model per repository:
 | Private bespoke lead tool | Bundled component and Forms binding | Provider API, credentials, pairing, events, admin SSO, and custom storage |
 | Public SaaS, embedded app | Provider backend and security modules; replace the bundled entry with an `embedded_app` frame and message bridge | Customer-origin frontend bundle |
 
-See [Reference architectures](https://docs.typeroll.com/extensions/reference-architectures/)
+See [Reference architectures](https://typeroll.com/docs/extensions/reference-architectures/)
 before choosing a deployment model. An embedded app validates the first init
 message from `window.parent`, locks its HTTPS origin, and validates all later
 messages against that origin and the negotiated Extension identity. It must not
@@ -171,6 +171,36 @@ Typeroll does not validate the recipient token or make the resulting action
 safe. The provider must use a cryptographically random, scoped, expiring,
 revocable credential and authorize every API request.
 
+## Site navigation and browser storage
+
+The local host models runtime **0.39.1**, including `context.preview`,
+`context.site.url(path)`, `context.site.navigate(path)` and installation-scoped
+`context.storage.session` / `context.storage.local` (`get`, `set`, `remove`).
+Site paths must be root-relative, such as `/contact/`. Storage accepts JSON
+values up to 64 KiB with keys of 1–128 characters. Never store recipient tokens
+or credentials in these areas.
+
+Use the supplied context in Extension code. The helpers in `src/local-host/`
+only simulate a published site: Typeroll's preview host owns its navigation
+and storage bridge. Test preview behavior in Typeroll; do not fall back to
+native browser storage when a preview bridge is unavailable.
+
+The example component still works with runtime 0.38.0. If your component uses
+`site` or `storage`, raise its manifest's `runtime_compatibility` to
+`>=0.39.1 <1.0.0` before publishing.
+
+## Importing media from an integration
+
+This Extension starter is not a media importer. An authenticated management
+integration must first check import readiness and connect the Organization's
+own verified storage. Upload local files using the API's upload URL, PUT the
+bytes directly to R2, then finalize. For an external URL, use the media import
+endpoint; the customer's transfer Worker fetches and verifies the file.
+Do not send Cloudflare keys or management API keys to the frontend context.
+See [Media API and import prerequisites](https://typeroll.com/docs/tools/media/)
+for both Cloud and self-hosted Typeroll CMS. The build provider does not change
+this transfer flow.
+
 ## Provider deployment
 
 `src/provider/server.ts` is a dependency-free Node reference server. Local
@@ -220,5 +250,5 @@ SHA-256 verified, and copied under the customer domain's own
 CDN. A bundled component is therefore trusted customer-origin code; use the
 sandboxed `embedded_app` mode for code that should not receive that trust.
 
-See [Typeroll Extension documentation](https://docs.typeroll.com/extensions/overview/)
+See [Typeroll Extension documentation](https://typeroll.com/docs/extensions/overview/)
 for the full manifest and runtime contract.

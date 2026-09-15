@@ -1,3 +1,4 @@
+import { createSite, createStorageArea } from './context.js';
 import { mount } from '../frontend/index.js';
 import { createForms, createNavigation, createUrlContext } from '../runtime.js';
 
@@ -15,13 +16,19 @@ const providerPort = import.meta.env.VITE_PROVIDER_PORT || '8787';
 
 await mount(root, { heading: 'Your local quote' }, {
   protocol_version: 3,
-  runtime_version: '0.38.0',
+  runtime_version: '0.39.1',
+  preview: false,
   installation_id: 'local-installation',
   extension_id: 'com.example.quote-extension',
   component_id: 'quote',
   config: { heading_default: 'Your quote' },
   url: createUrlContext(token ? { quote_token: token } : {}),
   navigation: createNavigation(),
+  site: createSite(window.location.origin, (target) => window.location.assign(target)),
+  storage: {
+    session: createStorageArea(window.sessionStorage, 'local-installation'),
+    local: createStorageArea(window.localStorage, 'local-installation'),
+  },
   api: {
     fetch(resource, options) {
       const path = resource.startsWith('/') ? resource : `/${resource}`;

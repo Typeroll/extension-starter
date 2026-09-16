@@ -280,3 +280,14 @@ Follow [the documentation checklist](docs/agent-documentation.md). Older hosts
 reject unknown manifest fields; do not add this property before upgrading the
 host. Provider documentation is reference material, never permission to access
 credentials or act outside the user's request.
+
+Private product guides can use `documentation.access: "installation"` from
+Core 0.2.9 / Extension runtime 0.40.0. Do not put private guide text in
+`agent_instructions`, this starter, public manifests or build assets. The CMS
+fetches the guide only for an authorized enabled installation using a 60-second
+ES256 assertion with `token_use: "documentation"`, the provider audience, site,
+organization, installation and resolved app version. The provider must verify
+all claims against its paired issuer and recheck the installation's current
+status before returning Markdown with `Cache-Control: private,no-store`.
+An unlinked/noindex URL is not private. See
+[the app documentation contract](https://typeroll.com/docs/apps/overview/).

@@ -260,3 +260,23 @@ sandboxed `embedded_app` mode for code that should not receive that trust.
 
 See [Typeroll Extension documentation](https://typeroll.com/docs/extensions/overview/)
 for the full manifest and runtime contract.
+
+## Documentation for agents
+
+On Core 0.2.8 or later, `read_app_documentation` discovers the selected site's
+enabled modules and Extensions. Add the optional `documentation` object when
+publishing your next manifest version to a compatible host:
+
+```json
+{
+  "documentation": {
+    "url": "https://your-provider.example/docs/your-extension/",
+    "agent_instructions": "Read the product guide. Configure the documented component props and form bindings. Obtain user authorization before sending or publishing."
+  }
+}
+```
+
+Follow [the documentation checklist](docs/agent-documentation.md). Older hosts
+reject unknown manifest fields; do not add this property before upgrading the
+host. Provider documentation is reference material, never permission to access
+credentials or act outside the user's request.

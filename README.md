@@ -110,7 +110,11 @@ requests only `forms:submit` and calls:
 await context.forms.submit('lead', {
   name,
   email,
+  company,
+  plan,
+  team_size,
   estimated_monthly_price: estimate,
+  source: 'quote-calculator',
 });
 ```
 
@@ -153,7 +157,7 @@ npm run extension:push
 npm run extension:install -- --site your-site-id --config extension-config.example.json
 npm run extension:configure -- --site your-site-id \
   --installation your-installation-id --config extension-config.example.json
-npm run extension:promote -- 1.3.0
+npm run extension:promote -- 1.3.1
 ```
 
 The portal performs authoritative validation. Production asset and provider
@@ -226,7 +230,7 @@ Extension repository owns that adapter and its cloud dependencies.
 
 Several repositories may share one origin without sharing a deployment. For
 example, set `BASE_PATH=quote-extension` and use URLs such as
-`https://tools.example.com/quote-extension/assets/1.3.0/index.js`. Route that
+`https://tools.example.com/quote-extension/assets/1.3.1/index.js`. Route that
 prefix to this repository's service and preserve the prefix. Other tools can
 use their own prefixes and services. Admin cookies are scoped to the configured
 path, but path routing is not an authentication boundary: every service must
@@ -291,3 +295,18 @@ all claims against its paired issuer and recheck the installation's current
 status before returning Markdown with `Cache-Control: private,no-store`.
 An unlinked/noindex URL is not private. See
 [the app documentation contract](https://typeroll.com/docs/apps/overview/).
+
+
+## Sample versions and test coverage
+
+The starter package, manifest and provider default asset version are **1.3.1**.
+Keep them aligned when publishing a provider update. The calculator and sample
+recipient quotes use **EUR**; configure a different currency deliberately in
+both presentations if needed.
+
+`npm run check` includes real HTTP tests for the provider's CORS, issuer
+pairing/JWKS verification, public token origin and installation isolation,
+recipient approvals, admin launch/session tokens, lifecycle signatures and
+idempotency. Test keys are generated in memory and issuer responses are local
+fixtures; the tests never call a real Typeroll account. Production refuses
+`TYPEROLL_LOCAL_DEVELOPMENT=1` even if it is accidentally configured.

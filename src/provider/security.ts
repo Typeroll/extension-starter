@@ -91,7 +91,8 @@ export function verifyEs256Jwt(
     );
     const epoch = Math.floor(now.getTime() / 1000);
     if (!valid || claims.iss !== expected.issuer || claims.aud !== expected.audience) return undefined;
-    if (!claims.jti || !claims.sub || claims.exp <= epoch || claims.iat > epoch + 30) return undefined;
+    if (typeof claims.jti !== 'string' || !claims.jti || typeof claims.sub !== 'string' || !claims.sub ||
+      !Number.isFinite(claims.exp) || !Number.isFinite(claims.iat) || claims.exp <= epoch || claims.iat > epoch + 30 || claims.exp <= claims.iat) return undefined;
     if (expected.tokenUse && claims.token_use !== expected.tokenUse) return undefined;
     if (expected.nonce && claims.nonce !== expected.nonce) return undefined;
     return claims;
@@ -189,10 +190,17 @@ export class IssuerTrustStore {
     if (!claims) return undefined;
     const trust = await this.#get(claims.iss);
     if (!trust) return undefined;
-    return verifyEs256Jwt(token, trust.jwks, {
+    const verified = verifyEs256Jwt(token, trust.jwks, {
       issuer: claims.iss,
       audience: this.#extensionId,
     });
+    // Legacy delegated-user grants omit token_use. Public/installation/pairing
+    // tokens must never be accepted as an administrator's browser session.
+    if (!verified || (verified.token_use !== undefined && verified.token_use !== 'portal_admin') ||
+      !['read', 'write', 'admin'].includes(String(verified.permission)) ||
+      !Array.isArray(verified.scopes) ||
+      ![verified.org_id, verified.site_id, verified.installation_id].every(value => typeof value === 'string' && value)) return undefined;
+    return verified;
   }
 
   async has(issuer: string): Promise<boolean> {

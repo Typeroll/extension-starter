@@ -7,13 +7,13 @@ test('recipient tokens are stored as installation-scoped digests', async () => {
   const digest = recipientTokenDigest('com.example.quote-extension', 'recipient-secret');
   const storage = createMemoryProviderStorage([[
     digest,
-    { installation_id: 'installation-one', title: 'Quote', total: 'SEK 100', approved: false },
+    { installation_id: 'installation-one', title: 'Quote', total: 'EUR 100', approved: false },
   ]]);
 
   assert.equal(digest.includes('recipient-secret'), false);
   assert.equal(await storage.quotes.getByRecipientDigest(digest, 'installation-two'), undefined);
   assert.deepEqual(await storage.quotes.getByRecipientDigest(digest, 'installation-one'), {
-    installation_id: 'installation-one', title: 'Quote', total: 'SEK 100', approved: false,
+    installation_id: 'installation-one', title: 'Quote', total: 'EUR 100', approved: false,
   });
   assert.equal((await storage.quotes.approveByRecipientDigest(digest, 'installation-one'))?.approved, true);
 });

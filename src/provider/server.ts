@@ -7,9 +7,10 @@ import { createMemoryProviderStorage, type ProviderStorage, type ProviderStorage
 const extensionId = process.env.TYPEROLL_EXTENSION_ID || 'com.example.quote-extension';
 const port = Number(process.env.PORT || 8787);
 const localDevelopment = process.env.TYPEROLL_LOCAL_DEVELOPMENT === '1';
+if (localDevelopment && process.env.NODE_ENV === 'production') throw new Error('Local development bypass is forbidden in production');
 const host = process.env.HOST || (localDevelopment ? '127.0.0.1' : '0.0.0.0');
 const basePath = `/${String(process.env.BASE_PATH || '').replace(/^\/+|\/+$/g, '')}`.replace(/^\/$/, '');
-const extensionVersion = process.env.EXTENSION_VERSION || '1.3.0';
+const extensionVersion = process.env.EXTENSION_VERSION || '1.3.1';
 const clientId = process.env.TYPEROLL_CLIENT_ID || '';
 const clientSecret = process.env.TYPEROLL_CLIENT_SECRET || '';
 const eventSecret = process.env.TYPEROLL_EVENT_SECRET || '';
@@ -25,7 +26,7 @@ async function loadStorage(): Promise<ProviderStorage> {
   if (localDevelopment) {
     return createMemoryProviderStorage([[
       recipientTokenDigest(extensionId, 'demo-customer-token'),
-      { installation_id: 'local-installation', title: 'Wedding package', total: 'SEK 24,900', approved: false },
+      { installation_id: 'local-installation', title: 'Wedding package', total: 'EUR 2,490', approved: false },
     ]]);
   }
   const adapter = process.env.PROVIDER_STORAGE_MODULE?.trim();
@@ -106,7 +107,7 @@ function route(pathname: string): string | undefined {
   return pathname.startsWith(`${basePath}/`) ? pathname.slice(basePath.length) : undefined;
 }
 
-const server = http.createServer(async (request, response) => {
+export const server = http.createServer(async (request, response) => {
   const corsAllowed = allowSiteCors(request, response);
   if (request.method === 'OPTIONS') {
     response.writeHead(corsAllowed ? 204 : 403).end();
